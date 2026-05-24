@@ -25,6 +25,15 @@ function MarketplaceNavbar() {
                 {link.label}
               </NavLink>
             ))}
+
+            {!isLoading && user ? (
+              <NavLink
+                to="/mis-publicaciones"
+                className={({ isActive }) => `site-nav-link${isActive ? ' active' : ''}`}
+              >
+                Mis publicaciones
+              </NavLink>
+            ) : null}
           </div>
 
           <div className="site-nav-auth">

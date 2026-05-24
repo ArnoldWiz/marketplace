@@ -4,6 +4,7 @@ import AuthLayout from './layouts/AuthLayout.jsx'
 import HomePage from './pages/HomePage.jsx'
 import ListingDetailPage from './pages/ListingDetailPage.jsx'
 import CreateListingPage from './pages/CreateListingPage.jsx'
+import MyPublicationsPage from './pages/MyPublicationsPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import RegisterPage from './pages/RegisterPage.jsx'
 
@@ -15,6 +16,7 @@ function App() {
         <Route path="publicacion" element={<ListingDetailPage />} />
         <Route path="publicacion/:listingId" element={<ListingDetailPage />} />
         <Route path="publicar" element={<CreateListingPage />} />
+        <Route path="mis-publicaciones" element={<MyPublicationsPage />} />
       </Route>
       <Route element={<AuthLayout />}>
         <Route path="login" element={<LoginPage />} />

@@ -122,12 +122,8 @@ class PublicationCreateAPIView(APIView):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get(self, request):
-        publications = (
-            request.user.publications.select_related('category')
-            .prefetch_related('images')
-            .all()
-        )
-        serializer = PublicationListSerializer(publications, many=True)
+        publications = request.user.publications.select_related('category').prefetch_related('images').all()
+        serializer = PublicationListSerializer(publications, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):

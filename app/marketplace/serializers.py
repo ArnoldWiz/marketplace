@@ -64,11 +64,23 @@ class PublicationImageSerializer(serializers.ModelSerializer):
 
 class PublicationListSerializer(serializers.ModelSerializer):
 	category = CategorySerializer(read_only=True)
-	images = PublicationImageSerializer(many=True, read_only=True)
+	images = serializers.SerializerMethodField()
 
 	class Meta:
 		model = Publication
 		fields = ('id', 'title', 'description', 'price', 'location', 'category', 'images', 'created_at')
+
+	def get_images(self, obj):
+		request = self.context.get('request')
+		image_urls = []
+
+		for image in obj.images.all():
+			if request is not None:
+				image_urls.append(request.build_absolute_uri(image.file.url))
+			else:
+				image_urls.append(image.file.url)
+
+		return image_urls
 
 
 class PublicationCreateSerializer(serializers.ModelSerializer):
