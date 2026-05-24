@@ -1,6 +1,140 @@
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
+import { getCsrfToken } from '../utils/csrf.js'
+
+const mexicoStates = [
+  'Aguascalientes',
+  'Baja California',
+  'Baja California Sur',
+  'Campeche',
+  'Chiapas',
+  'Chihuahua',
+  'Ciudad de Mexico',
+  'Coahuila',
+  'Colima',
+  'Durango',
+  'Guanajuato',
+  'Guerrero',
+  'Hidalgo',
+  'Jalisco',
+  'Estado de Mexico',
+  'Michoacan',
+  'Morelos',
+  'Nayarit',
+  'Nuevo Leon',
+  'Oaxaca',
+  'Puebla',
+  'Queretaro',
+  'Quintana Roo',
+  'San Luis Potosi',
+  'Sinaloa',
+  'Sonora',
+  'Tabasco',
+  'Tamaulipas',
+  'Tlaxcala',
+  'Veracruz',
+  'Yucatan',
+  'Zacatecas',
+]
 
 function CreateListingPage() {
+  const navigate = useNavigate()
+  const { user, isLoading } = useAuth()
+  const [categories, setCategories] = useState([])
+  const [formData, setFormData] = useState({
+    title: '',
+    price: '',
+    category: '',
+    location: '',
+    description: '',
+  })
+  const [selectedImages, setSelectedImages] = useState([])
+  const [errorMessage, setErrorMessage] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const response = await fetch('/api/categories/')
+        const payload = await response.json()
+        setCategories(payload)
+        if (payload.length > 0) {
+          setFormData((currentForm) => ({
+            ...currentForm,
+            category: String(payload[0].id),
+          }))
+        }
+      } catch {
+        setCategories([])
+      }
+    }
+
+    loadCategories()
+  }, [])
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate('/login')
+    }
+  }, [isLoading, navigate, user])
+
+  const handleChange = (event) => {
+    const { name, value } = event.target
+    setFormData((currentForm) => ({
+      ...currentForm,
+      [name]: value,
+    }))
+  }
+
+  const handleImagesChange = (event) => {
+    setSelectedImages(Array.from(event.target.files ?? []))
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+
+    setErrorMessage('')
+    setIsSubmitting(true)
+
+    try {
+      const csrfToken = await getCsrfToken()
+      const formPayload = new FormData()
+      formPayload.append('title', formData.title)
+      formPayload.append('price', formData.price)
+      formPayload.append('category', formData.category)
+      formPayload.append('location', formData.location)
+      formPayload.append('description', formData.description)
+
+      selectedImages.forEach((imageFile) => {
+        formPayload.append('images', imageFile)
+      })
+
+      const response = await fetch('/api/publications/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken,
+        },
+        credentials: 'include',
+        body: formPayload,
+      })
+
+      const payload = await response.json()
+
+      if (!response.ok) {
+        const firstError = Object.values(payload).flat()?.[0]
+        setErrorMessage(firstError || 'No se pudo crear la publicacion.')
+        return
+      }
+
+      navigate('/')
+    } catch {
+      setErrorMessage('No se pudo conectar con el servidor.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <main className="container publish">
       <div className="publish-grid">
@@ -8,40 +142,52 @@ function CreateListingPage() {
           <h1>Crear publicacion</h1>
           <p>Completa los datos para mostrar tu producto en el market.</p>
 
-          <form className="publish-form">
+          <form className="publish-form" onSubmit={handleSubmit}>
             <div className="field">
               <label htmlFor="titulo">Titulo</label>
-              <input type="text" id="titulo" placeholder="Ej. Smartwatch Senda" />
+              <input type="text" id="titulo" name="title" value={formData.title} onChange={handleChange} placeholder="Ej. Smartwatch Senda" required />
             </div>
             <div className="field">
               <label htmlFor="precio">Precio</label>
-              <input type="text" id="precio" placeholder="$1,450 MXN" />
+              <input type="number" id="precio" name="price" value={formData.price} onChange={handleChange} placeholder="1450" min="0" step="0.01" required />
             </div>
             <div className="field">
               <label htmlFor="categoria">Categoria</label>
-              <select id="categoria" defaultValue="Tecnologia">
-                <option>Tecnologia</option>
-                <option>Hogar</option>
-                <option>Moda</option>
-                <option>Deportes</option>
+              <select id="categoria" name="category" value={formData.category} onChange={handleChange} required>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="field">
               <label htmlFor="ubicacion">Ubicacion</label>
-              <input type="text" id="ubicacion" placeholder="Ciudad o colonia" />
+              <select id="ubicacion" name="location" value={formData.location} onChange={handleChange} required>
+                <option value="">Selecciona un estado</option>
+                {mexicoStates.map((state) => (
+                  <option key={state} value={state}>
+                    {state}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="field full">
               <label htmlFor="descripcion">Descripcion</label>
-              <textarea id="descripcion" rows="5" placeholder="Describe tu producto..."></textarea>
+              <textarea id="descripcion" name="description" rows="5" value={formData.description} onChange={handleChange} placeholder="Describe tu producto..." required></textarea>
             </div>
             <div className="field full">
               <label htmlFor="fotos">Fotos</label>
-              <div className="upload-box">Arrastra tus fotos aqui</div>
+              <div className="upload-box">
+                <input id="fotos" type="file" accept="image/*" multiple onChange={handleImagesChange} />
+                <span>{selectedImages.length > 0 ? `${selectedImages.length} imagenes seleccionadas` : 'Selecciona una o varias imagenes'}</span>
+              </div>
             </div>
+            {errorMessage ? <p className="text-danger m-0">{errorMessage}</p> : null}
             <div className="form-actions">
-              <Link className="btn" to="/">
-                Publicar
-              </Link>
+              <button className="btn" type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Publicando...' : 'Publicar'}
+              </button>
               <Link className="btn secondary" to="/">
                 Cancelar
               </Link>

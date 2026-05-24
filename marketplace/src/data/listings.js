@@ -3,7 +3,6 @@ export const quickFilters = ['Cerca de mi', 'Nuevos', 'Entrega', 'Verificados']
 export const navigationLinks = [
   { label: 'Inicio', to: '/' },
   { label: 'Publicar', to: '/publicar' },
-  { label: 'Iniciar sesion', to: '/login' },
 ]
 
 export const marketplaceMenu = [

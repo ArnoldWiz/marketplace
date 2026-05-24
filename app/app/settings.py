@@ -30,7 +30,12 @@ SECRET_KEY = 'django-insecure-lcohya2lfb!6#%zraba847(2h-x*mxyr$6ikb2mjzug9#y+juc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5174',
+    'http://127.0.0.1:5174',
+]
 
 
 # Application definition
@@ -86,7 +91,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.environ.get('MYSQL_DATABASE', 'marketplace'),
         'USER': os.environ.get('MYSQL_USER', 'root'),
-        'PASSWORD': os.environ.get('MYSQL_PASSWORD', ''),
+        'PASSWORD': os.environ.get('MYSQL_PASSWORD', 'root'),
         'HOST': os.environ.get('MYSQL_HOST', '127.0.0.1'),
         'PORT': os.environ.get('MYSQL_PORT', '3306'),
         'OPTIONS': {
@@ -131,6 +136,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

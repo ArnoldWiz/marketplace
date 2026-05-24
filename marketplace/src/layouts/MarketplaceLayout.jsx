@@ -1,17 +1,10 @@
 import { Outlet } from 'react-router-dom'
+import MarketplaceNavbar from '../components/MarketplaceNavbar.jsx'
 
 function MarketplaceLayout() {
   return (
     <div>
-      <header className="site-header">
-        <div className="container header-row">
-          <div className="brand">Market Place</div>
-          <nav className="site-nav">
-            <a href="/">Mis Publicaciones</a>
-            <a href="/login">Iniciar sesion</a>
-          </nav>
-        </div>
-      </header>
+      <MarketplaceNavbar />
       <Outlet />
       <footer>
         <div className="container">Market Place 2026 · Ayuda · Contacto</div>

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Category, MarketplaceUser, Publication
+from .models import Category, MarketplaceUser, Publication, PublicationImage
 
 
 @admin.register(MarketplaceUser)
@@ -27,5 +27,11 @@ class CategoryAdmin(admin.ModelAdmin):
 class PublicationAdmin(admin.ModelAdmin):
 	list_display = ('title', 'seller', 'category', 'price', 'clicks', 'is_paused', 'deleted_at')
 	list_filter = ('category', 'is_paused', 'deleted_at', 'created_at')
-	search_fields = ('title', 'summary', 'description', 'location', 'seller__username')
+	search_fields = ('title', 'description', 'location', 'seller__username')
 	readonly_fields = ('clicks', 'created_at', 'updated_at', 'deleted_at')
+
+
+@admin.register(PublicationImage)
+class PublicationImageAdmin(admin.ModelAdmin):
+	list_display = ('publication', 'file', 'created_at')
+	readonly_fields = ('created_at',)

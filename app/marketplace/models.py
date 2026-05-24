@@ -1,11 +1,51 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.contrib.auth import get_user_model
 from django.utils import timezone
+
+
+MEXICO_STATE_CHOICES = [
+	('Aguascalientes', 'Aguascalientes'),
+	('Baja California', 'Baja California'),
+	('Baja California Sur', 'Baja California Sur'),
+	('Campeche', 'Campeche'),
+	('Chiapas', 'Chiapas'),
+	('Chihuahua', 'Chihuahua'),
+	('Ciudad de Mexico', 'Ciudad de Mexico'),
+	('Coahuila', 'Coahuila'),
+	('Colima', 'Colima'),
+	('Durango', 'Durango'),
+	('Guanajuato', 'Guanajuato'),
+	('Guerrero', 'Guerrero'),
+	('Hidalgo', 'Hidalgo'),
+	('Jalisco', 'Jalisco'),
+	('Estado de Mexico', 'Estado de Mexico'),
+	('Michoacan', 'Michoacan'),
+	('Morelos', 'Morelos'),
+	('Nayarit', 'Nayarit'),
+	('Nuevo Leon', 'Nuevo Leon'),
+	('Oaxaca', 'Oaxaca'),
+	('Puebla', 'Puebla'),
+	('Queretaro', 'Queretaro'),
+	('Quintana Roo', 'Quintana Roo'),
+	('San Luis Potosi', 'San Luis Potosi'),
+	('Sinaloa', 'Sinaloa'),
+	('Sonora', 'Sonora'),
+	('Tabasco', 'Tabasco'),
+	('Tamaulipas', 'Tamaulipas'),
+	('Tlaxcala', 'Tlaxcala'),
+	('Veracruz', 'Veracruz'),
+	('Yucatan', 'Yucatan'),
+	('Zacatecas', 'Zacatecas'),
+]
 
 
 class MarketplaceUser(AbstractUser):
 	is_seller = models.BooleanField(default=False)
+
+	class Meta:
+		db_table = 'users'
 
 
 class Category(models.Model):
@@ -15,6 +55,7 @@ class Category(models.Model):
 
 	class Meta:
 		ordering = ['name']
+		db_table = 'categories'
 
 	def __str__(self):
 		return self.name
@@ -40,11 +81,9 @@ class Publication(models.Model):
 		related_name='publications',
 	)
 	title = models.CharField(max_length=150)
-	summary = models.CharField(max_length=255, blank=True)
 	description = models.TextField()
 	price = models.DecimalField(max_digits=12, decimal_places=2)
-	location = models.CharField(max_length=120, blank=True)
-	condition = models.CharField(max_length=80, blank=True)
+	location = models.CharField(max_length=120, choices=MEXICO_STATE_CHOICES, blank=True)
 	clicks = models.PositiveIntegerField(default=0)
 	is_paused = models.BooleanField(default=False)
 	deleted_at = models.DateTimeField(null=True, blank=True)
@@ -55,6 +94,7 @@ class Publication(models.Model):
 
 	class Meta:
 		ordering = ['-created_at']
+		db_table = 'publications'
 		indexes = [
 			models.Index(fields=['deleted_at', 'is_paused']),
 			models.Index(fields=['category', 'is_paused']),
@@ -72,7 +112,7 @@ class Publication(models.Model):
 		seller_id = self.seller_id
 
 		if is_new and seller_id:
-			type(self.seller).objects.filter(pk=seller_id, is_seller=False).update(is_seller=True)
+			get_user_model().objects.filter(pk=seller_id, is_seller=False).update(is_seller=True)
 
 		super().save(*args, **kwargs)
 
@@ -94,3 +134,16 @@ class Publication(models.Model):
 	def register_click(self):
 		self.clicks += 1
 		self.save(update_fields=['clicks', 'updated_at'])
+
+
+class PublicationImage(models.Model):
+	publication = models.ForeignKey(
+		Publication,
+		on_delete=models.CASCADE,
+		related_name='images',
+	)
+	file = models.FileField(upload_to='publications/')
+	created_at = models.DateTimeField(auto_now_add=True)
+
+	def __str__(self):
+		return f'{self.publication.title} - {self.file.name}'
