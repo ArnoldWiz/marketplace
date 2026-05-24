@@ -62,13 +62,21 @@ class PublicationImageSerializer(serializers.ModelSerializer):
 		fields = ('id', 'file')
 
 
+class PublicationUserSummarySerializer(serializers.ModelSerializer):
+	class Meta:
+		model = User
+		fields = ('id', 'username', 'email', 'is_seller')
+
+
 class PublicationListSerializer(serializers.ModelSerializer):
 	category = CategorySerializer(read_only=True)
 	images = serializers.SerializerMethodField()
+	price_display = serializers.SerializerMethodField()
+	is_paused = serializers.BooleanField(read_only=True)
 
 	class Meta:
 		model = Publication
-		fields = ('id', 'title', 'description', 'price', 'location', 'category', 'images', 'created_at')
+		fields = ('id', 'title', 'description', 'price', 'price_display', 'location', 'category', 'images', 'clicks', 'created_at', 'is_paused')
 
 	def get_images(self, obj):
 		request = self.context.get('request')
@@ -81,6 +89,74 @@ class PublicationListSerializer(serializers.ModelSerializer):
 				image_urls.append(image.file.url)
 
 		return image_urls
+
+	def get_price_display(self, obj):
+		return f"${obj.price:,.2f} MXN"
+
+
+class PublicationDetailSerializer(serializers.ModelSerializer):
+	category = CategorySerializer(read_only=True)
+	seller = PublicationUserSummarySerializer(read_only=True)
+	images = serializers.SerializerMethodField()
+	price_display = serializers.SerializerMethodField()
+	questions = serializers.SerializerMethodField()
+	created_at = serializers.DateTimeField()
+	updated_at = serializers.DateTimeField()
+
+	class Meta:
+		model = Publication
+		fields = (
+			'id',
+			'title',
+			'description',
+			'price',
+			'price_display',
+			'location',
+			'category',
+			'seller',
+			'images',
+			'clicks',
+			'created_at',
+			'updated_at',
+			'questions',
+			'is_paused',
+		)
+
+	def get_images(self, obj):
+		request = self.context.get('request')
+		return [request.build_absolute_uri(image.file.url) if request is not None else image.file.url for image in obj.images.all()]
+
+	def get_price_display(self, obj):
+		return f"${obj.price:,.2f} MXN"
+
+	def get_questions(self, obj):
+		request = self.context.get('request')
+		questions = []
+		qs = obj.questions.select_related('author').select_related('answer__author').all()
+		for q in qs:
+			q_data = {
+				'id': q.id,
+				'body': q.body,
+				'author': {
+					'id': q.author.id,
+					'username': q.author.username,
+				},
+				'created_at': q.created_at,
+				'answers': [],
+			}
+			if hasattr(q, 'answer') and q.answer is not None:
+				a = q.answer
+				q_data['answers'].append({
+					'id': a.id,
+					'body': a.body,
+					'author': {
+						'id': a.author.id,
+						'username': a.author.username,
+					},
+					'created_at': a.created_at,
+				})
+			questions.append(q_data)
+		return questions
 
 
 class PublicationCreateSerializer(serializers.ModelSerializer):
@@ -110,3 +186,11 @@ class PublicationCreateSerializer(serializers.ModelSerializer):
 			PublicationImage.objects.create(publication=publication, file=uploaded_file)
 
 		return publication
+
+
+class QuestionCreateSerializer(serializers.Serializer):
+    body = serializers.CharField()
+
+
+class AnswerCreateSerializer(serializers.Serializer):
+    body = serializers.CharField()

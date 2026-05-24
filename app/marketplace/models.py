@@ -147,3 +147,47 @@ class PublicationImage(models.Model):
 
 	def __str__(self):
 		return f'{self.publication.title} - {self.file.name}'
+
+
+class Question(models.Model):
+	publication = models.ForeignKey(
+		Publication,
+		on_delete=models.CASCADE,
+		related_name='questions',
+	)
+	author = models.ForeignKey(
+		settings.AUTH_USER_MODEL,
+		on_delete=models.CASCADE,
+		related_name='questions',
+	)
+	body = models.TextField()
+	created_at = models.DateTimeField(auto_now_add=True)
+
+	class Meta:
+		ordering = ['-created_at']
+		db_table = 'questions'
+
+	def __str__(self):
+		return f'Q:{self.publication.title} by {self.author.username}'
+
+
+class Answer(models.Model):
+	question = models.OneToOneField(
+		Question,
+		on_delete=models.CASCADE,
+		related_name='answer',
+	)
+	author = models.ForeignKey(
+		settings.AUTH_USER_MODEL,
+		on_delete=models.CASCADE,
+		related_name='answers',
+	)
+	body = models.TextField()
+	created_at = models.DateTimeField(auto_now_add=True)
+
+	class Meta:
+		ordering = ['created_at']
+		db_table = 'answers'
+
+	def __str__(self):
+		return f'A to Q:{self.question_id} by {self.author.username}'

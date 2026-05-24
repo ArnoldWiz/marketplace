@@ -8,6 +8,7 @@ function MyPublicationsPage() {
   const [publications, setPublications] = useState([])
   const [isFetching, setIsFetching] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
+  const [toggling, setToggling] = useState({})
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -104,6 +105,34 @@ function MyPublicationsPage() {
                 <span>{publication.location}</span>
                 <span>{new Date(publication.created_at).toLocaleDateString('es-MX')}</span>
               </div>
+            </div>
+            <div className="publication-card__actions">
+              <button className="btn" onClick={() => navigate(`/publicar/${publication.id}`)}>Editar</button>
+              <button
+                className="btn secondary"
+                onClick={async () => {
+                  const pid = publication.id
+                  if (toggling[pid]) return
+                  setToggling((s) => ({ ...s, [pid]: true }))
+                  try {
+                    const csrf = await (await import('../utils/csrf.js')).getCsrfToken()
+                    const res = await fetch(`/api/publications/${pid}/`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                      credentials: 'include',
+                      body: JSON.stringify({ is_paused: !publication.is_paused }),
+                    })
+                    if (res.ok) {
+                      const updated = await res.json()
+                      setPublications((prev) => prev.map(p => p.id === pid ? { ...p, is_paused: updated.is_paused } : p))
+                    }
+                  } finally {
+                    setToggling((s) => ({ ...s, [pid]: false }))
+                  }
+                }}
+              >
+                {publication.is_paused ? 'Reanudar' : 'Pausar'}
+              </button>
             </div>
           </article>
         ))}

@@ -176,15 +176,49 @@ a {
   margin-bottom: 10px;
 }
 
+.category-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.category-filter label {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.category-filter select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #598dc5;
+  background: #ffffff;
+  color: #435466;
+  outline: none;
+}
+
+.category-filter select:focus {
+  border-color: #6aa8eb;
+  box-shadow: 0 0 0 3px rgba(106, 168, 235, 0.25);
+}
+
 .chip {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  border: 0;
   padding: 6px 12px;
   border-radius: 999px;
   background: #6cacf0;
   color: #ffffff;
   font-size: 0.85rem;
   margin: 4px 6px 0 0;
+  cursor: pointer;
+}
+
+.chip.active,
+.chip:hover {
+  background: #4975a3;
 }
 
 .feed {
@@ -202,6 +236,10 @@ a {
 
 .feed-header h2 {
   font-size: 1.4rem;
+}
+
+.feed-actions--center {
+  justify-content: center;
 }
 
 .cards {
@@ -231,13 +269,29 @@ a {
   width: 100%;
 }
 
-.card::before {
-  content: '';
+.card__media {
   display: block;
   width: 100%;
   height: 220px;
   border-radius: 10px;
+  overflow: hidden;
   background: linear-gradient(135deg, #6aa8eb 0%, #6cacf0 50%, #598dc5 100%);
+}
+
+.card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.card__placeholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  font-weight: 700;
 }
 
 .card h3 {
@@ -545,8 +599,32 @@ footer {
 }
 
 .detail-media {
+  overflow: hidden;
   height: 280px;
   margin-bottom: 18px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6aa8eb 0%, #6cacf0 50%, #598dc5 100%);
+}
+
+.detail-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.detail-media__placeholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.detail-meta {
+  margin-bottom: 10px;
+  color: #435466;
 }
 
 .detail-title {
@@ -572,6 +650,21 @@ footer {
   padding: 10px 12px;
   border-radius: 10px;
   background: #f2f7fd;
+  border: 1px solid #c7d8eb;
+}
+
+.detail-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.detail-gallery img {
+  width: 100%;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 10px;
   border: 1px solid #c7d8eb;
 }
 

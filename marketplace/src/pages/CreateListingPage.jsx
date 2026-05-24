@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { getCsrfToken } from '../utils/csrf.js'
 
@@ -40,6 +40,7 @@ const mexicoStates = [
 
 function CreateListingPage() {
   const navigate = useNavigate()
+  const { listingId } = useParams()
   const { user, isLoading } = useAuth()
   const [categories, setCategories] = useState([])
   const [formData, setFormData] = useState({
@@ -52,6 +53,7 @@ function CreateListingPage() {
   const [selectedImages, setSelectedImages] = useState([])
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -72,6 +74,29 @@ function CreateListingPage() {
 
     loadCategories()
   }, [])
+
+  useEffect(() => {
+    const loadPublication = async () => {
+      if (!listingId) return
+      try {
+        const res = await fetch(`/api/publications/${listingId}/`)
+        if (!res.ok) return
+        const data = await res.json()
+        setFormData({
+          title: data.title || '',
+          price: data.price || '',
+          category: data.category?.id ? String(data.category.id) : '',
+          location: data.location || '',
+          description: data.description || '',
+        })
+        setIsPaused(Boolean(data.is_paused))
+      } catch {
+        // ignore
+      }
+    }
+
+    loadPublication()
+  }, [listingId])
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -110,14 +135,34 @@ function CreateListingPage() {
         formPayload.append('images', imageFile)
       })
 
-      const response = await fetch('/api/publications/', {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': csrfToken,
-        },
-        credentials: 'include',
-        body: formPayload,
-      })
+      let response
+      if (listingId) {
+        // editing existing publication (no image update here)
+        response = await fetch(`/api/publications/${listingId}/`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            title: formData.title,
+            price: formData.price,
+            category: formData.category,
+            location: formData.location,
+            description: formData.description,
+          }),
+        })
+      } else {
+        response = await fetch('/api/publications/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken,
+          },
+          credentials: 'include',
+          body: formPayload,
+        })
+      }
 
       const payload = await response.json()
 
@@ -139,7 +184,7 @@ function CreateListingPage() {
     <main className="container publish">
       <div className="publish-grid">
         <section className="publish-card">
-          <h1>Crear publicacion</h1>
+          <h1>{listingId ? 'Editar publicacion' : 'Crear publicacion'}</h1>
           <p>Completa los datos para mostrar tu producto en el market.</p>
 
           <form className="publish-form" onSubmit={handleSubmit}>
@@ -184,14 +229,36 @@ function CreateListingPage() {
               </div>
             </div>
             {errorMessage ? <p className="text-danger m-0">{errorMessage}</p> : null}
-            <div className="form-actions">
-              <button className="btn" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Publicando...' : 'Publicar'}
-              </button>
-              <Link className="btn secondary" to="/">
-                Cancelar
-              </Link>
-            </div>
+                  <div className="form-actions">
+                    <button className="btn" type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? (listingId ? 'Guardando...' : 'Publicando...') : (listingId ? 'Guardar cambios' : 'Publicar')}
+                    </button>
+                    {listingId ? (
+                      <button
+                        className="btn secondary"
+                        type="button"
+                        onClick={async () => {
+                          const csrf = await getCsrfToken()
+                          const res = await fetch(`/api/publications/${listingId}/`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                            credentials: 'include',
+                            body: JSON.stringify({ is_paused: !isPaused }),
+                          })
+                          if (res.ok) {
+                            const data = await res.json()
+                            setIsPaused(Boolean(data.is_paused))
+                          }
+                        }}
+                      >
+                        {isPaused ? 'Reanudar' : 'Pausar'}
+                      </button>
+                    ) : (
+                      <Link className="btn secondary" to="/">
+                        Cancelar
+                      </Link>
+                    )}
+                  </div>
           </form>
         </section>
 

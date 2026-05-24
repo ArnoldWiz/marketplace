@@ -15,24 +15,37 @@ function MarketplaceNavbar() {
 
         <nav className="site-nav">
           <div className="site-nav-links">
-            {navigationLinks.map((link) => (
-              <NavLink
-                key={link.label}
-                to={link.to}
-                end={link.to === '/'}
-                className={({ isActive }) => `site-nav-link${isActive ? ' active' : ''}`}
-              >
-                {link.label}
-              </NavLink>
-            ))}
+            {navigationLinks
+              .filter((l) => !(user && user.is_staff && l.label === 'Publicar'))
+              .map((link) => (
+                <NavLink
+                  key={link.label}
+                  to={link.to}
+                  end={link.to === '/'}
+                  className={({ isActive }) => `site-nav-link${isActive ? ' active' : ''}`}
+                >
+                  {link.label}
+                </NavLink>
+              ))}
 
             {!isLoading && user ? (
-              <NavLink
-                to="/mis-publicaciones"
-                className={({ isActive }) => `site-nav-link${isActive ? ' active' : ''}`}
-              >
-                Mis publicaciones
-              </NavLink>
+              user.is_staff ? (
+                <NavLink to="/admin/estadisticas" className={({ isActive }) => `site-nav-link${isActive ? ' active' : ''}`}>
+                  Estadísticas
+                </NavLink>
+              ) : (
+                <>
+                  <NavLink
+                    to="/mis-publicaciones"
+                    className={({ isActive }) => `site-nav-link${isActive ? ' active' : ''}`}
+                  >
+                    Mis publicaciones
+                  </NavLink>
+                  <NavLink to="/admin/estadisticas" className={({ isActive }) => `site-nav-link${isActive ? ' active' : ''}`}>
+                    Estadísticas públicas
+                  </NavLink>
+                </>
+              )
             ) : null}
           </div>
 
