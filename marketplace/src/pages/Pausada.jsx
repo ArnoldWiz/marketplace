@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 
-function PublicationPausedPage() {
+function Pausada() {
   return (
     <main className="container detail">
       <section className="detail-card">
@@ -14,4 +14,4 @@ function PublicationPausedPage() {
   )
 }
 
-export default PublicationPausedPage
+export default Pausada

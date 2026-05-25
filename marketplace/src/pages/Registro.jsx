@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getCsrfToken } from '../utils/csrf.js'
+import { registerUser } from '../api/marketplaceApi.js'
 
-function RegisterPage() {
+function Registro() {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     username: '',
@@ -30,35 +30,18 @@ function RegisterPage() {
     setIsSubmitting(true)
 
     try {
-      const csrfToken = await getCsrfToken()
-
-      const response = await fetch('/api/register/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrfToken,
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-          password_confirm: formData.passwordConfirm,
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-        }),
+      await registerUser({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        password_confirm: formData.passwordConfirm,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
       })
 
-      const payload = await response.json()
-
-      if (!response.ok) {
-        const firstError = Object.values(payload).flat()?.[0]
-        setErrorMessage(firstError || 'No se pudo crear la cuenta.')
-        return
-      }
-
       navigate('/login', { state: { registered: true } })
-    } catch {
-      setErrorMessage('No se pudo conectar con el servidor.')
+    } catch (error) {
+      setErrorMessage(error.message || 'No se pudo conectar con el servidor.')
     } finally {
       setIsSubmitting(false)
     }
@@ -116,4 +99,4 @@ function RegisterPage() {
   )
 }
 
-export default RegisterPage
+export default Registro

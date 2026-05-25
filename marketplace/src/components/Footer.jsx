@@ -1,4 +1,4 @@
-function MarketplaceFooter() {
+function Footer() {
   return (
     <footer className="footer-bar mt-auto">
       <div className="container py-4 d-flex flex-column flex-md-row justify-content-between gap-2 small text-secondary">
@@ -9,4 +9,4 @@ function MarketplaceFooter() {
   )
 }
 
-export default MarketplaceFooter
+export default Footer

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import ListingCard from '../components/ListingCard.jsx'
-import SidebarFilters from '../components/SidebarFilters.jsx'
+import { getCategories, getPublicationsFeed } from '../api/marketplaceApi.js'
+import Card from '../components/Card.jsx'
+import Sidebar from '../components/Sidebar.jsx'
 
-function HomePage() {
+function Home() {
   const [categories, setCategories] = useState([])
   const [publications, setPublications] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('')
@@ -15,8 +16,7 @@ function HomePage() {
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const response = await fetch('/api/categories/')
-        const payload = await response.json()
+        const payload = await getCategories()
         setCategories(payload)
       } catch {
         setCategories([])
@@ -30,15 +30,10 @@ function HomePage() {
     const loadPublications = async () => {
       try {
         setIsLoading(true)
-        const params = new URLSearchParams()
-        params.set('filter', selectedFilter === 'Populares' ? 'popular' : 'new')
-
-        if (selectedCategory) {
-          params.set('category', selectedCategory)
-        }
-
-        const response = await fetch(`/api/publications/all/?${params.toString()}`)
-        const payload = await response.json()
+        const payload = await getPublicationsFeed({
+          filter: selectedFilter === 'Populares' ? 'popular' : 'new',
+          category: selectedCategory,
+        })
         setPublications(payload)
         setVisibleCount(10)
         setErrorMessage('')
@@ -63,7 +58,7 @@ function HomePage() {
       </section>
 
       <div className="layout">
-        <SidebarFilters
+        <Sidebar
           categories={categories}
           selectedCategory={selectedCategory}
           selectedFilter={selectedFilter}
@@ -96,7 +91,7 @@ function HomePage() {
 
               <div className="cards">
                 {visiblePublications.map((listing) => (
-                  <ListingCard key={listing.id} listing={listing} />
+                  <Card key={listing.id} listing={listing} />
                 ))}
               </div>
 
@@ -115,4 +110,4 @@ function HomePage() {
   )
 }
 
-export default HomePage
+export default Home

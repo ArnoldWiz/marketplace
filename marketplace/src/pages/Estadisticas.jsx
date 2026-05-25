@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { getCsrfToken } from '../utils/csrf.js'
+import { getAdminPublications } from '../api/marketplaceApi.js'
 
-function AdminStatsPage() {
+function Estadisticas() {
   const [range, setRange] = useState('30d')
   const [query, setQuery] = useState('')
   const [publications, setPublications] = useState([])
@@ -15,16 +15,7 @@ function AdminStatsPage() {
     const load = async () => {
       setIsLoading(true)
       try {
-        const url = new URL('/api/admin/publications/', window.location.origin)
-        url.searchParams.set('range', range)
-        if (query) url.searchParams.set('q', query)
-        if (ordering) url.searchParams.set('ordering', ordering)
-        url.searchParams.set('page', String(page))
-        url.searchParams.set('page_size', String(pageSize))
-
-        const res = await fetch(url.toString(), { credentials: 'include' })
-        if (!res.ok) return
-        const data = await res.json()
+        const data = await getAdminPublications({ range, query, ordering, page, pageSize })
         setPublications(data.results || [])
         setTotalPages(data.total_pages || 1)
       } catch {
@@ -107,4 +98,4 @@ function AdminStatsPage() {
   )
 }
 
-export default AdminStatsPage
+export default Estadisticas

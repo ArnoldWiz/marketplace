@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 
-function ListingCard({ listing }) {
+function Card({ listing }) {
   const coverImage = listing.images?.[0]
 
   return (
@@ -15,4 +15,4 @@ function ListingCard({ listing }) {
   )
 }
 
-export default ListingCard
+export default Card

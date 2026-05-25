@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext.jsx'
+import { getMyPublications, setPublicationPaused } from '../api/marketplaceApi.js'
+import { useAuth } from '../context/authContext.js'
 
-function MyPublicationsPage() {
+function MisPublicaciones() {
   const navigate = useNavigate()
   const { user, isLoading } = useAuth()
   const [publications, setPublications] = useState([])
@@ -19,16 +20,7 @@ function MyPublicationsPage() {
   useEffect(() => {
     const loadPublications = async () => {
       try {
-        const response = await fetch('/api/publications/', {
-          credentials: 'include',
-        })
-
-        if (!response.ok) {
-          setErrorMessage('No se pudieron cargar tus publicaciones.')
-          return
-        }
-
-        const payload = await response.json()
+        const payload = await getMyPublications()
         setPublications(payload)
       } catch {
         setErrorMessage('No se pudieron cargar tus publicaciones.')
@@ -115,17 +107,8 @@ function MyPublicationsPage() {
                   if (toggling[pid]) return
                   setToggling((s) => ({ ...s, [pid]: true }))
                   try {
-                    const csrf = await (await import('../utils/csrf.js')).getCsrfToken()
-                    const res = await fetch(`/api/publications/${pid}/`, {
-                      method: 'PATCH',
-                      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
-                      credentials: 'include',
-                      body: JSON.stringify({ is_paused: !publication.is_paused }),
-                    })
-                    if (res.ok) {
-                      const updated = await res.json()
-                      setPublications((prev) => prev.map(p => p.id === pid ? { ...p, is_paused: updated.is_paused } : p))
-                    }
+                    const updated = await setPublicationPaused(pid, !publication.is_paused)
+                    setPublications((prev) => prev.map(p => p.id === pid ? { ...p, is_paused: updated.is_paused } : p))
                   } finally {
                     setToggling((s) => ({ ...s, [pid]: false }))
                   }
@@ -141,4 +124,4 @@ function MyPublicationsPage() {
   )
 }
 
-export default MyPublicationsPage
+export default MisPublicaciones

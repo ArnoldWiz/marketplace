@@ -1,8 +1,12 @@
 import { NavLink, Link } from 'react-router-dom'
-import { navigationLinks } from '../data/listings.js'
-import { useAuth } from '../context/AuthContext.jsx'
+import { useAuth } from '../context/authContext.js'
 
-function MarketplaceNavbar() {
+const navigationLinks = [
+  { label: 'Inicio', to: '/' },
+  { label: 'Publicar', to: '/publicar' },
+]
+
+function Navbar() {
   const { user, isLoading, signOut } = useAuth()
   const userInitial = user?.username?.charAt(0)?.toUpperCase() ?? '?'
 
@@ -72,4 +76,4 @@ function MarketplaceNavbar() {
   )
 }
 
-export default MarketplaceNavbar
+export default Navbar

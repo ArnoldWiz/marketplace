@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext.jsx'
-import { getCsrfToken } from '../utils/csrf.js'
+import { loginUser } from '../api/marketplaceApi.js'
+import { useAuth } from '../context/authContext.js'
 
-function LoginPage() {
+function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const { signIn } = useAuth()
@@ -30,30 +30,12 @@ function LoginPage() {
     setIsSubmitting(true)
 
     try {
-      const csrfToken = await getCsrfToken()
-
-      const response = await fetch('/api/login/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrfToken,
-        },
-        credentials: 'include',
-        body: JSON.stringify(formData),
-      })
-
-      const payload = await response.json()
-
-      if (!response.ok) {
-        const firstError = Object.values(payload).flat()?.[0]
-        setErrorMessage(firstError || 'No se pudo iniciar sesion.')
-        return
-      }
+      const payload = await loginUser(formData)
 
       signIn(payload)
       navigate('/')
-    } catch {
-      setErrorMessage('No se pudo conectar con el servidor.')
+    } catch (error) {
+      setErrorMessage(error.message || 'No se pudo conectar con el servidor.')
     } finally {
       setIsSubmitting(false)
     }
@@ -89,4 +71,4 @@ function LoginPage() {
   )
 }
 
-export default LoginPage
+export default Login

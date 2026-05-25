@@ -1,7 +1,6 @@
-import { createContext, useContext, useEffect, useState } from 'react'
-import { getCsrfToken } from '../utils/csrf.js'
-
-const AuthContext = createContext(null)
+import { useEffect, useState } from 'react'
+import { AuthContext } from './authContext.js'
+import { fetchCurrentUser, logoutUser } from '../api/marketplaceApi.js'
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
@@ -13,17 +12,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const syncSession = async () => {
       try {
-        const response = await fetch('/api/me/', {
-          credentials: 'include',
-        })
-
-        if (!response.ok) {
-          setUser(null)
-          localStorage.removeItem('marketplace_user')
-          return
-        }
-
-        const data = await response.json()
+        const data = await fetchCurrentUser()
         setUser(data)
         localStorage.setItem('marketplace_user', JSON.stringify(data))
       } catch {
@@ -44,15 +33,7 @@ export function AuthProvider({ children }) {
 
   const signOut = async () => {
     try {
-      const csrfToken = await getCsrfToken()
-
-      await fetch('/api/logout/', {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': csrfToken,
-        },
-        credentials: 'include',
-      })
+      await logoutUser()
     } finally {
       setUser(null)
       localStorage.removeItem('marketplace_user')
@@ -64,14 +45,4 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   )
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider')
-  }
-
-  return context
 }

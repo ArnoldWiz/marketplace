@@ -1,9 +1,9 @@
 import { Outlet } from 'react-router-dom'
 
-function AuthLayout() {
+function LoginLayouts() {
   return (
     <Outlet />
   )
 }
 
-export default AuthLayout
+export default LoginLayouts

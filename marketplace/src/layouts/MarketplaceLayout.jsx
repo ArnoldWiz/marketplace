@@ -1,14 +1,13 @@
 import { Outlet } from 'react-router-dom'
-import MarketplaceNavbar from '../components/MarketplaceNavbar.jsx'
+import Navbar from '../components/Navbar.jsx'
+import Footer from '../components/Footer.jsx'
 
 function MarketplaceLayout() {
   return (
     <div>
-      <MarketplaceNavbar />
+      <Navbar />
       <Outlet />
-      <footer>
-        <div className="container">Market Place 2026 · Ayuda · Contacto</div>
-      </footer>
+      <Footer></Footer>
     </div>
   )
 }

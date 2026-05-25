@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { getCsrfToken } from '../utils/csrf.js'
+import { createPublicationQuestion, createQuestionAnswer, getPublication } from '../api/marketplaceApi.js'
+import { useAuth } from '../context/authContext.js'
 
-function ListingDetailPage() {
+function Details() {
   const { listingId } = useParams()
   const [listing, setListing] = useState(null)
   const [questions, setQuestions] = useState([])
@@ -20,15 +20,7 @@ function ListingDetailPage() {
     const loadListing = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch(`/api/publications/${listingId}/`)
-
-        if (!response.ok) {
-          setErrorMessage('No se pudo cargar la publicacion.')
-          return
-        }
-
-        const payload = await response.json()
-        // if publication is paused, redirect to paused page
+        const payload = await getPublication(listingId)
         if (payload.is_paused) {
           navigate(`/publicacion/${listingId}/pausada`)
           return
@@ -45,7 +37,7 @@ function ListingDetailPage() {
     }
 
     loadListing()
-  }, [listingId])
+  }, [listingId, navigate])
 
   if (isLoading) {
     return (
@@ -104,12 +96,6 @@ function ListingDetailPage() {
             </div>
           ) : null}
           <div style={{ marginTop: '18px' }}>
-            {listing.is_paused ? (
-              <div className="paused-overlay">
-                <h3>Publicación pausada</h3>
-                <p>Esta publicación está actualmente pausada y no aparece en la página principal.</p>
-              </div>
-            ) : null}
             <h3>Preguntas y respuestas</h3>
 
             {questions.length === 0 ? <p>No hay preguntas aun.</p> : (
@@ -141,17 +127,11 @@ function ListingDetailPage() {
                           <button className="btn" onClick={async () => {
                             const text = (answerText[q.id] || '').trim()
                             if (!text) return
-                            const csrf = await getCsrfToken()
-                            const res = await fetch(`/api/questions/${q.id}/answers/`, {
-                              method: 'POST',
-                              headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrf},
-                              credentials: 'include',
-                              body: JSON.stringify({body: text}),
-                            })
-                            if (res.ok) {
-                              const data = await res.json()
+                            try {
+                              const data = await createQuestionAnswer(q.id, text)
                               setQuestions((prev) => prev.map(item => item.id === q.id ? {...item, answers: [...(item.answers||[]), data]} : item))
                               setAnswerText({...answerText, [q.id]: ''})
+                            } catch {
                             }
                           }}>Responder</button>
                         </div>
@@ -168,17 +148,11 @@ function ListingDetailPage() {
                 <button className="btn" onClick={async () => {
                   const text = newQuestion.trim()
                   if (!text) return
-                  const csrf = await getCsrfToken()
-                  const res = await fetch(`/api/publications/${listingId}/questions/`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrf},
-                    credentials: 'include',
-                    body: JSON.stringify({body: text}),
-                  })
-                  if (res.ok) {
-                    const data = await res.json()
+                  try {
+                    const data = await createPublicationQuestion(listingId, text)
                     setQuestions((prev) => [data, ...prev])
                     setNewQuestion('')
+                  } catch {
                   }
                 }}>Preguntar</button>
               </div>
@@ -192,4 +166,4 @@ function ListingDetailPage() {
   )
 }
 
-export default ListingDetailPage
+export default Details

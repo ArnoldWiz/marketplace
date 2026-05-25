@@ -187,11 +187,8 @@ class PublicationListAPIView(APIView):
 
     def get_queryset(self, request):
         queryset = Publication.objects.select_related('category', 'seller').prefetch_related('images').filter(deleted_at__isnull=True, is_paused=False)
-        month_ago = timezone.now() - timedelta(days=30)
         category_id = request.query_params.get('category')
         ordering_filter = request.query_params.get('filter', 'new')
-
-        queryset = queryset.filter(created_at__gte=month_ago)
 
         if category_id:
             queryset = queryset.filter(category_id=category_id)

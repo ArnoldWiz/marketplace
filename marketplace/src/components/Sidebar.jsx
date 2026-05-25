@@ -1,8 +1,15 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { marketplaceMenu, quickFilters } from '../data/listings.js'
 
-function SidebarFilters({ categories, selectedCategory, selectedFilter, onCategoryChange, onFilterChange }) {
+const quickFilters = ['Nuevos', 'Populares']
+
+const marketplaceMenu = [
+  { label: 'Inicio', to: '/' },
+  { label: 'Publicar', to: '/publicar' },
+  { label: 'Mis publicaciones', to: '/mis-publicaciones' },
+]
+
+function Sidebar({ categories, selectedCategory, selectedFilter, onCategoryChange, onFilterChange }) {
   const categoryOptions = useMemo(() => categories ?? [], [categories])
 
   return (
@@ -49,4 +56,4 @@ function SidebarFilters({ categories, selectedCategory, selectedFilter, onCatego
   )
 }
 
-export default SidebarFilters
+export default Sidebar

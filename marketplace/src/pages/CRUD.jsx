@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext.jsx'
-import { getCsrfToken } from '../utils/csrf.js'
+import {
+  createPublication,
+  getCategories,
+  getPublication,
+  setPublicationPaused,
+  updatePublication,
+} from '../api/marketplaceApi.js'
+import { useAuth } from '../context/authContext.js'
 
-const mexicoStates = [
+const estados = [
   'Aguascalientes',
   'Baja California',
   'Baja California Sur',
@@ -38,7 +44,7 @@ const mexicoStates = [
   'Zacatecas',
 ]
 
-function CreateListingPage() {
+function CRUD() {
   const navigate = useNavigate()
   const { listingId } = useParams()
   const { user, isLoading } = useAuth()
@@ -58,8 +64,7 @@ function CreateListingPage() {
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const response = await fetch('/api/categories/')
-        const payload = await response.json()
+        const payload = await getCategories()
         setCategories(payload)
         if (payload.length > 0) {
           setFormData((currentForm) => ({
@@ -79,9 +84,7 @@ function CreateListingPage() {
     const loadPublication = async () => {
       if (!listingId) return
       try {
-        const res = await fetch(`/api/publications/${listingId}/`)
-        if (!res.ok) return
-        const data = await res.json()
+        const data = await getPublication(listingId)
         setFormData({
           title: data.title || '',
           price: data.price || '',
@@ -91,7 +94,6 @@ function CreateListingPage() {
         })
         setIsPaused(Boolean(data.is_paused))
       } catch {
-        // ignore
       }
     }
 
@@ -123,58 +125,28 @@ function CreateListingPage() {
     setIsSubmitting(true)
 
     try {
-      const csrfToken = await getCsrfToken()
-      const formPayload = new FormData()
-      formPayload.append('title', formData.title)
-      formPayload.append('price', formData.price)
-      formPayload.append('category', formData.category)
-      formPayload.append('location', formData.location)
-      formPayload.append('description', formData.description)
-
-      selectedImages.forEach((imageFile) => {
-        formPayload.append('images', imageFile)
-      })
-
-      let response
       if (listingId) {
-        // editing existing publication (no image update here)
-        response = await fetch(`/api/publications/${listingId}/`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken,
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            title: formData.title,
-            price: formData.price,
-            category: formData.category,
-            location: formData.location,
-            description: formData.description,
-          }),
+        await updatePublication(listingId, {
+          title: formData.title,
+          price: formData.price,
+          category: formData.category,
+          location: formData.location,
+          description: formData.description,
         })
       } else {
-        response = await fetch('/api/publications/', {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': csrfToken,
-          },
-          credentials: 'include',
-          body: formPayload,
+        await createPublication({
+          title: formData.title,
+          price: formData.price,
+          category: formData.category,
+          location: formData.location,
+          description: formData.description,
+          images: selectedImages,
         })
-      }
-
-      const payload = await response.json()
-
-      if (!response.ok) {
-        const firstError = Object.values(payload).flat()?.[0]
-        setErrorMessage(firstError || 'No se pudo crear la publicacion.')
-        return
       }
 
       navigate('/')
-    } catch {
-      setErrorMessage('No se pudo conectar con el servidor.')
+    } catch (error) {
+      setErrorMessage(error.message || 'No se pudo conectar con el servidor.')
     } finally {
       setIsSubmitting(false)
     }
@@ -210,7 +182,7 @@ function CreateListingPage() {
               <label htmlFor="ubicacion">Ubicacion</label>
               <select id="ubicacion" name="location" value={formData.location} onChange={handleChange} required>
                 <option value="">Selecciona un estado</option>
-                {mexicoStates.map((state) => (
+                {estados.map((state) => (
                   <option key={state} value={state}>
                     {state}
                   </option>
@@ -238,17 +210,8 @@ function CreateListingPage() {
                         className="btn secondary"
                         type="button"
                         onClick={async () => {
-                          const csrf = await getCsrfToken()
-                          const res = await fetch(`/api/publications/${listingId}/`, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
-                            credentials: 'include',
-                            body: JSON.stringify({ is_paused: !isPaused }),
-                          })
-                          if (res.ok) {
-                            const data = await res.json()
-                            setIsPaused(Boolean(data.is_paused))
-                          }
+                              const data = await setPublicationPaused(listingId, !isPaused)
+                              setIsPaused(Boolean(data.is_paused))
                         }}
                       >
                         {isPaused ? 'Reanudar' : 'Pausar'}
@@ -283,4 +246,4 @@ function CreateListingPage() {
   )
 }
 
-export default CreateListingPage
+export default CRUD
