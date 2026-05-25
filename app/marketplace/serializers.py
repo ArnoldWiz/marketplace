@@ -65,11 +65,12 @@ class PublicationImageSerializer(serializers.ModelSerializer):
 class PublicationUserSummarySerializer(serializers.ModelSerializer):
 	class Meta:
 		model = User
-		fields = ('id', 'username', 'email', 'is_seller')
+		fields = ('id', 'username', 'email', 'is_seller', 'f')
 
 
 class PublicationListSerializer(serializers.ModelSerializer):
 	category = CategorySerializer(read_only=True)
+ 
 	images = serializers.SerializerMethodField()
 	price_display = serializers.SerializerMethodField()
 	is_paused = serializers.BooleanField(read_only=True)
