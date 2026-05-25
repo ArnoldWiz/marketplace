@@ -31,16 +31,13 @@ class PublicationAdminListAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # allow staff to see all; non-staff see only public (not paused, not deleted)
-        is_staff = request.user.is_staff
+        # staff/superusers see all publications; other users only see their own
+        is_admin = request.user.is_staff or request.user.is_superuser
         base_qs = Publication.objects.select_related('category', 'seller').prefetch_related('images')
-        if is_staff:
+        if is_admin:
             queryset = base_qs.all()
         else:
-            # show public publications plus the requesting user's own publications (even if paused), exclude deleted
-            queryset = base_qs.filter(deleted_at__isnull=True).filter(
-                Q(is_paused=False) | Q(seller_id=request.user.id)
-            )
+            queryset = base_qs.filter(deleted_at__isnull=True, seller_id=request.user.id)
 
         # filtering
         q = request.query_params.get('q')
