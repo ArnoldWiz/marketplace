@@ -65,19 +65,19 @@ class PublicationImageSerializer(serializers.ModelSerializer):
 class PublicationUserSummarySerializer(serializers.ModelSerializer):
 	class Meta:
 		model = User
-		fields = ('id', 'username', 'email', 'is_seller', 'f')
+		fields = ('id', 'username', 'email', 'is_seller', 'first_name', 'last_name')
 
 
 class PublicationListSerializer(serializers.ModelSerializer):
 	category = CategorySerializer(read_only=True)
- 
+	seller = PublicationUserSummarySerializer(read_only=True)
 	images = serializers.SerializerMethodField()
 	price_display = serializers.SerializerMethodField()
 	is_paused = serializers.BooleanField(read_only=True)
 
 	class Meta:
 		model = Publication
-		fields = ('id', 'title', 'description', 'price', 'price_display', 'location', 'category', 'images', 'clicks', 'created_at', 'is_paused')
+		fields = ('id','seller', 'title', 'description', 'price', 'price_display', 'location', 'category', 'images', 'clicks', 'created_at', 'is_paused')
 
 	def get_images(self, obj):
 		request = self.context.get('request')

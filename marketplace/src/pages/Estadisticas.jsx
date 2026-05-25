@@ -20,6 +20,7 @@ function Estadisticas() {
       try {
         const data = await getAdminPublications({ range, query, ordering, page, pageSize })
         setPublications(data.results || [])
+        console.log(data)
         setTotalPages(data.total_pages || 1)
       } catch {
         setPublications([])
@@ -214,7 +215,7 @@ function Estadisticas() {
                     <tr key={p.id}>
                       <td>{p.id}</td>
                       <td>{p.title}</td>
-                      <td>{p.seller?.username}</td>
+                      <td>{p.seller?.first_name} {p.seller?.last_name}</td>
                       <td>{p.category?.name}</td>
                       <td>{p.price}</td>
                       <td>{p.location}</td>

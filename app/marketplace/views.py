@@ -31,7 +31,6 @@ class PublicationAdminListAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # staff/superusers see all publications; other users only see their own
         is_admin = request.user.is_staff or request.user.is_superuser
         base_qs = Publication.objects.select_related('category', 'seller').prefetch_related('images')
         if is_admin:
@@ -39,7 +38,6 @@ class PublicationAdminListAPIView(APIView):
         else:
             queryset = base_qs.filter(deleted_at__isnull=True, seller_id=request.user.id)
 
-        # filtering
         q = request.query_params.get('q')
         category_id = request.query_params.get('category')
         seller_id = request.query_params.get('seller')
@@ -50,7 +48,6 @@ class PublicationAdminListAPIView(APIView):
         page = int(request.query_params.get('page') or 1)
         page_size = int(request.query_params.get('page_size') or 20)
 
-        # cap page_size to 20
         if page_size > 20:
             page_size = 20
 
@@ -74,7 +71,6 @@ class PublicationAdminListAPIView(APIView):
         elif is_paused in ('0', 'false', 'False'):
             queryset = queryset.filter(is_paused=False)
 
-        # simple date presets
         from django.utils import timezone
         from datetime import timedelta
         now = timezone.now()
@@ -87,11 +83,10 @@ class PublicationAdminListAPIView(APIView):
         elif date_range == '1y':
             queryset = queryset.filter(created_at__gte=now - timedelta(days=365))
         elif date_range and date_range.isdigit():
-            # treat as year
+            
             year = int(date_range)
             queryset = queryset.filter(created_at__year=year)
 
-        # ordering
         ordering_field_map = {
             'id': 'id',
             'title': 'title',
@@ -104,7 +99,6 @@ class PublicationAdminListAPIView(APIView):
             'category': 'category__name',
         }
         if ordering:
-            # support '-' prefix
             desc = ordering.startswith('-')
             key = ordering[1:] if desc else ordering
             mapped = ordering_field_map.get(key)
@@ -114,7 +108,7 @@ class PublicationAdminListAPIView(APIView):
                 else:
                     queryset = queryset.order_by(mapped)
 
-        # pagination
+        
         paginator = Paginator(queryset, page_size)
         try:
             page_obj = paginator.page(page)
@@ -419,11 +413,9 @@ class QuestionAnswerCreateAPIView(APIView):
         question = Question.objects.select_related('publication__seller').get(pk=question_id)
         publication = question.publication
 
-        # only publication owner can answer
         if publication.seller_id != request.user.id:
             return Response({'detail': 'Solo el dueño de la publicacion puede responder.'}, status=status.HTTP_403_FORBIDDEN)
 
-        # enforce single answer per question
         if hasattr(question, 'answer') and question.answer is not None:
             return Response({'detail': 'Esta pregunta ya tiene una respuesta.'}, status=status.HTTP_400_BAD_REQUEST)
 
