@@ -405,14 +405,14 @@ footer {
 
 .publication-card__topline {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: flex-start;
+  gap: 6px;
 }
 
 .publication-card__topline strong {
   color: #3c5f85;
-  white-space: nowrap;
 }
 
 .publication-card__meta {
